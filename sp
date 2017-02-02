@@ -52,6 +52,7 @@ SP_VERSION="0.1"
 SP_DEST="org.mpris.MediaPlayer2.spotify"
 SP_PATH="/org/mpris/MediaPlayer2"
 SP_MEMB="org.mpris.MediaPlayer2.Player"
+VOL_PERCENTAGE_STEP="10"
 
 # SHELL OPTIONS
 
@@ -81,6 +82,22 @@ require tr
 function sp-dbus {
   # Sends the given method to Spotify over dbus. 
   dbus-send --print-reply --dest=$SP_DEST $SP_PATH $SP_MEMB.$1 ${*:2} > /dev/null
+}
+
+function sp-vol {
+    case "$1" in
+        up)
+            amixer -D pulse sset Master $VOL_PERCENTAGE_STEP%+ > /dev/null
+            ;;
+        down)
+            amixer -D pulse sset Master $VOL_PERCENTAGE_STEP%- > /dev/null
+            ;;
+        toggle)
+            amixer -D pulse sset Master toggle > /dev/null
+            ;;
+        *)
+            sp-help
+    esac
 }
 
 function sp-open {
@@ -154,9 +171,7 @@ function sp-feh {
 
 function sp-url {
   # Prints the HTTP url.
-
-  TRACK=$(sp-metadata | grep "url" | cut -d'|' -f2 | cut -d':' -f3)
-  echo "http://open.spotify.com/track/$TRACK"
+  sp metadata | grep "url" | cut -d'|' -f2
 }
 
 function sp-clip {
@@ -164,6 +179,7 @@ function sp-clip {
 
   require xclip
   sp-url | xclip
+  echo "HTTP Url has been copied to clipboard"
 }
 
 function sp-http {
@@ -183,6 +199,10 @@ function sp-help {
   echo "  sp pause      - Pause Spotify"
   echo "  sp next       - Go to next track"
   echo "  sp prev       - Go to previous track"
+  echo ""
+  echo "  sp vol up     - Volume up"
+  echo "  sp vol down   - Volume down"
+  echo "  sp vol toggle - Mute/unmute"
   echo ""
   echo "  sp current    - Format the currently playing track"
   echo "  sp metadata   - Dump the current track's metadata"
